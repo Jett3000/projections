@@ -3,8 +3,10 @@
 
 // manager
 var mgr;
-var sceneLength = 300; // frames per scene
-var frameCounter = 0;
+var sceneLength = 3600 * 2; // frames per scene
+var frameCountdown = 0;
+var sceneNames = [CoverSketch, JellygonSketch, RecursiveSketch, SpinnerSketch];
+var sceneBank = [];
 
 // preloaded font
 var fontAzoSansItalic;
@@ -41,6 +43,39 @@ class HollowPentagon {
         }
         endContour()
         endShape();
+    }
+}
+
+class TranslucentPentagon {
+    constructor() {
+        this.regen();
+    }
+
+    regen() {
+        this.fillColor = random(["#bc9eca88", "#752c7c88", "#b5339188"])
+        this.theta = random(TWO_PI);
+        this.spinning = random() < 0.8;
+        let oneDegree = TWO_PI / 360;
+        this.angularVel = random(oneDegree / 2, oneDegree * 2);
+        if (random() < 0.5) this.angularVel *= -1;
+
+        this.pos = createVector(random(width), random(height));
+        this.rad = random(60, 100);
+    }
+
+    show() {
+        push()
+        fill(this.fillColor);
+        translate(this.pos);
+        rotate(this.theta);
+        scale(this.rad);
+        beginShape();
+        for (let p of pentaPoints) {
+            vertex(p.x, p.y);
+        }
+        endShape();
+        this.theta = this.spinning ? this.theta + this.angularVel : this.theta;
+        pop();
     }
 }
 
@@ -102,6 +137,14 @@ class PentaPrism {
     }
 }
 
+function populateSceneBank() {
+    for (let scene of sceneNames) {
+        sceneBank.push(scene);
+    }
+
+    shuffle(sceneBank, true);
+}
+
 // main sketch setup
 function preload() {
     fontAzoSansItalic = loadFont("https://use.typekit.net/af/90ca1f/000000000000000000013f4f/27/a?primer=7cdcb44be4a7db8877ffa5c0007b8dd865b3bbc383831fe2ea177f62257a9191&fvd=i7&v=3");
@@ -127,21 +170,27 @@ function setup() {
 
     // setup manager and scenes
     mgr = new SceneManager();
-    // mgr.addScene(JellygonSketch);
-    // mgr.addScene(CoverSketch);
-    mgr.addScene(FlasherSketch);
-    mgr.showNextScene();
+    populateSceneBank();
 }
 
 function draw() {
-    mgr.draw();
-    if (frameCounter == sceneLength) {
-        frameCounter = 0;
-        mgr.showNextScene();
-        return;
+    if (frameCountdown == 0) {
+        // reset countdown
+        frameCountdown = sceneLength;
+
+        // regenerate scene bank if emptied
+        if (sceneBank.length == 0) {
+            populateSceneBank();
+        }
+
+        // show the next scene in the bank
+        mgr.showScene(sceneBank.pop());
+
     } else {
-        frameCounter++;
+        frameCountdown--;
     }
+    mgr.draw();
+
 }
 
 // =============================================================
@@ -159,7 +208,7 @@ function JellygonSketch() {
     };
 
     this.enter = function () {
-        fill("#DA48975A");
+        fill("#DA48977A");
         stroke(100);
         strokeWeight(2);
     }
@@ -174,7 +223,6 @@ function JellygonSketch() {
         text('PROTOTYPE', width / 2, height / 2)
         pop();
         blendMode(ADD);
-        fill("#DA48975A");
 
         translate(0, height / 2);
         translate(width / 4, 0);
@@ -203,7 +251,7 @@ function CoverSketch() {
     var prism = new PentaPrism();;
     var panelCount = 1;
     var panelIncrement = true;
-    var frameInterval = 60;
+    var frameInterval = 120;
 
 
     this.enter = function () {
@@ -212,7 +260,7 @@ function CoverSketch() {
     }
 
     this.enter = function () {
-        fill("#DA48975A");
+        fill("#DA48977A");
         stroke(100);
         strokeWeight(2);
     }
@@ -239,37 +287,114 @@ function CoverSketch() {
     }
 }
 
-function FlasherSketch() {
-    var pentagons = [];
-    var hollowPentagon = new HollowPentagon(0.5);
+function SpinnerSketch() {
+    let numPentagons = 120;
+    let pentagons = [];
 
     this.setup = function () {
-        for (let i = 0; i < 3; i++) {
-            let temp = [];
-            for (let p = 0; p < 30; p++) {
-                let newVec = createVector(random(width), random(height), random(.3, .6));
-                temp.push(newVec);
-            }
-            pentagons.push(temp);
+        for (let i = 0; i < numPentagons; i++) {
+            pentagons.push(new TranslucentPentagon());
+        }
+    }
+
+    this.enter = function () {
+        noStroke();
+        for (let gon of pentagons) {
+            gon.regen();
         }
     }
 
     this.draw = function () {
         blendMode(BLEND);
         background("#000000");
-
+        push();
+        fill("#fcfaee");
+        noStroke();
+        text('PROTOTYPE', width / 2, height / 2)
+        pop();
         blendMode(ADD);
-        fill("#bc9eca")
 
-        // durmpac purple pentagons
-        for (let gon of pentagons[0]) {
-            push()
-            translate(gon.x, gon.y);
-            scale(gon.z)
-            rotate(random(TWO_PI))
-            hollowPentagon.show();
-            pop();
+        for (let gon of pentagons) {
+            gon.show();
         }
     }
 
+}
+
+function RecursiveSketch() {
+    var contourPoints = [];
+    var depth = 0;
+    var maxDepth = 4;
+    var depthIncrementInterval = 600;
+    var depthIncrementTracker = 0;
+
+    this.enter = function () {
+        depthIncrementTracker = 0;
+        depth = 0;
+        noStroke();
+        fill("#da4897a0");
+    }
+
+    this.setup = function () {
+        for (let p of pentaPoints) {
+            contourPoints.push(p.copy().mult(0.85));
+        }
+        contourPoints.reverse();
+    }
+
+    this.draw = function () {
+        // reset background
+        blendMode(BLEND);
+        background("#000000");
+
+        // draw text
+        push();
+        fill("#fcfaee");
+        noStroke();
+        text('PROTOTYPE', width / 2, height / 2)
+        pop();
+
+        // draw recursive pentagon
+        blendMode(ADD);
+        translate(width / 2, height / 2);
+        this.drawPentagon(height / 4, depth + 1);
+
+        // increment depth as needed
+        if (depthIncrementTracker == depthIncrementInterval) {
+            console.log("changing depth");
+            depth = (depth + 1) % maxDepth;
+            depthIncrementTracker = 0;
+        } else {
+            depthIncrementTracker++;
+        }
+
+
+    }
+
+    this.drawPentagon = function (rad, depth) {
+        rotate(millis() / 1000)
+
+        if (depth > 0) {
+            for (var point of pentaPoints) {
+                push();
+                translate(point.x * rad, point.y * rad);
+                this.drawPentagon(rad * 0.5, depth - 1);
+                pop();
+            }
+        }
+
+        push();
+        scale(rad);
+        beginShape()
+        for (var point of pentaPoints) {
+            vertex(point.x, point.y);
+        }
+        beginContour()
+        for (var point of contourPoints) {
+            vertex(point.x, point.y);
+        }
+        endContour()
+        endShape();
+        pop();
+    }
 }

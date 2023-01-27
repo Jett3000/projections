@@ -3,8 +3,10 @@
 
 // manager
 var mgr;
-var sceneLength = 600; // frames per scene
-var frameCounter = 0;
+var sceneLength = 3600; // frames per scene
+var frameCountdown = 0;
+var sceneNames = [BeasleySketch, EakesSketch, PowellSketch, BANSketch, MoranSketch, KnegoSketch, LeeSketch];
+var sceneBank = [];
 
 // prism pictures
 var beasleyPic;
@@ -14,7 +16,7 @@ var banPic;
 var moranPic;
 var knegoPic;
 var leePic;
-var headPic;
+var headPic; // bonus :)
 
 // precalculated points of a pentagon
 var pentaPoints = [];
