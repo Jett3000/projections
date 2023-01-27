@@ -3,7 +3,8 @@
 
 // manager
 var mgr;
-var sceneLength = 300; // frames per scene
+var sceneLength = 600; // frames per scene
+var frameCounter = 0;
 
 // prism pictures
 var beasleyPic;
@@ -107,24 +108,25 @@ class GlassPentagon {
     }
 }
 
+// main sketch setup
 function preload() {
     let currImage;
 
-    beasleyPic = loadImage('img/derrick-beasley-prism.png');
+    beasleyPic = loadImage('assets/img/derrick-beasley-prism.png');
 
-    eakesPic = loadImage('img/cwe-prism.png');
+    eakesPic = loadImage('assets/img/cwe-prism.png');
 
-    powellPic = loadImage('img/jermaine-powell-prism.png');
+    powellPic = loadImage('assets/img/jermaine-powell-prism.png');
 
-    banPic = loadImage('img/ban-artwork-prism.png');
+    banPic = loadImage('assets/img/ban-artwork-prism.png');
 
-    moranPic = loadImage('img/mailande-moran-prism.png');
+    moranPic = loadImage('assets/img/mailande-moran-prism.png');
 
-    knegoPic = loadImage('img/samir-knego-prism.png');
+    knegoPic = loadImage('assets/img/samir-knego-prism.png');
 
-    leePic = loadImage('img/jim-lee-prism.png');
+    leePic = loadImage('assets/img/jim-lee-prism.png');
 
-    headPic = loadImage('img/jim-lee-head.png');
+    headPic = loadImage('assets/img/jim-lee-head.png');
 }
 
 function setup() {
@@ -181,7 +183,13 @@ function setup() {
 
 function draw() {
     mgr.draw();
-    if (frameCount % sceneLength == 0) mgr.showNextScene();
+    if (frameCounter == sceneLength){
+        frameCounter = 0;
+        mgr.showNextScene();
+        return;
+    } else {
+        frameCounter++;
+    }
 }
 
 // =============================================================
@@ -192,15 +200,19 @@ function BeasleySketch() {
     var currPoint = 2;
     var cycleFrames = sceneLength;
 
+    this.enter = function () {
+        fill("#DA48975A");
+    }
+
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         translate(width / 2, height / 2);
         for (let i = 0; i < 5; i++) {
             push();
-            scale(width / 2.3);
+            scale(height / 2.1);
             let rotation = map(i, 0, 4, 0, 4 * TWO_PI / 5);
             let progress = map(frameCount % cycleFrames, 0, cycleFrames, 0, 2);
             rotation = progress > 1 ? -rotation : rotation;
@@ -230,6 +242,10 @@ function EakesSketch() {
     var pentagons = [];
     var pentagonPool = [];
 
+    this.enter = function () {
+        fill("#da48967e");
+    }
+
     this.setup = function () {
         // initialize pentagonPool and pentagons array
         for (var i = 0; i < 60; i++) {
@@ -242,7 +258,7 @@ function EakesSketch() {
 
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         // step through pentagons to show and simulate them,
@@ -270,13 +286,16 @@ function EakesSketch() {
 }
 
 function PowellSketch() {
+    var dotSize = 40;
+    var increase = 1.2;
 
-    // this.setup = function () {
-    // }
+    this.enter = function () {
+        fill("#da48964b");
+    }
 
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         translate(width / 2, height / 2);
@@ -284,17 +303,17 @@ function PowellSketch() {
             let p1 = pentaPoints[i];
             let p2 = pentaPoints[(i + 1) % 5];
 
-            for (let j = 0; j < 1; j += 0.05) {
+            for (let j = 0; j < 1; j += 0.02) {
                 // first lerp along the line between the points
                 let ePoint = p5.Vector.lerp(p1, p2, j);
                 // modulate by sin
                 ePoint.mult(1 + sin(frameCount * 0.04 + map(j, 0, 1, 0, TWO_PI)) / 6);
 
-                let distScale = powellPic.width / 1.5;
+                let distScale = powellPic.height / 1.5;
                 //draw an ellipse
-                ellipse(ePoint.x * distScale, ePoint.y * distScale, 15, 15);
-                ellipse(ePoint.x * distScale * 1.1, ePoint.y * distScale * 1.1, 17, 17);
-                ellipse(ePoint.x * distScale * 1.2, ePoint.y * distScale * 1.2, 20, 20);
+                circle(ePoint.x * distScale, ePoint.y * distScale, dotSize);
+                circle(ePoint.x * distScale * increase, ePoint.y * distScale * increase, dotSize * increase);
+                circle(ePoint.x * distScale * increase * increase, ePoint.y * distScale * increase * increase, dotSize * increase * increase);
 
             }
         }
@@ -316,7 +335,7 @@ function BANSketch() {
 
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         for (var pentagon of pentagons) {
@@ -333,12 +352,13 @@ function MoranSketch() {
     var rows = 8;
     var cols = 8;
 
-    // this.setup = function () {
-    // }
+    this.enter = function (){
+        fill("#da489680");
+    }
 
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         for (let col = 1; col <= cols; col++) {
@@ -348,8 +368,9 @@ function MoranSketch() {
                 let theta = map(row, 1, rows, 0, TWO_PI);
                 theta += col * TWO_PI / cols;
                 push();
-                translate(x + sin(theta + frameCount / 20) * 40, y);
-                scale(40);
+                translate(x + sin(theta + frameCount / 20) * 65, y);
+                scale(65);
+                rotate(noise(row * 0.005, col * 0.005, frameCount /400) * TWO_PI * 3);
                 beginShape();
                 for (var point of pentaPoints) {
                     vertex(point.x, point.y);
@@ -366,19 +387,22 @@ function MoranSketch() {
 
 function KnegoSketch() {
 
+    this.enter = function () {
+        fill("#da489620");
+    }
+
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         blendMode(ADD);
 
         translate(width / 2, height / 2);
         let layers = 8;
         for (let i = 0; i < layers; i++) {
-            let rad = map(i, 0, layers, knegoPic.width, width)
+            let rad = map(i, 0, layers, knegoPic.height, height)
             push();
             scale(rad / 1.5);
-            let reverse = i % 2 == 0 ? -1 : 1;
-            rotate((i * 0.1) * millis() / 1000)
+            rotate((i * 0.15) * millis() / 1000)
             beginShape()
             for (var point of pentaPoints) {
                 vertex(point.x, point.y);
@@ -396,11 +420,11 @@ function KnegoSketch() {
 function LeeSketch() {
     var pentagons = [];
     var countdownFrames;
-    var showingHead;
+    var transitionFrames = 30;
 
     this.enter = function () {
         countdownFrames = sceneLength * 0.6;
-        showingHead = false;
+        fill("#da489676");
     }
 
     this.setup = function () {
@@ -414,14 +438,14 @@ function LeeSketch() {
 
     this.draw = function () {
         // reset background
-        background("#000817");
+        background("#000000");
         translate(width / 2, height / 2);
 
         for (var pentagon of pentagons) {
             push();
             translate(pentagon.x, pentagon.y);
-            scale(40);
-            rotate(pentagon.z * TWO_PI)
+            scale(70);
+            rotate(pentagon.z)
             beginShape()
             for (var point of pentaPoints) {
                 vertex(point.x, point.y);
@@ -445,16 +469,16 @@ function LeeSketch() {
                 if (dist < 60) {
                     pentagon.mult(max(width, height));
                 } else {
-                    pentagon.mult(60);
+                    pentagon.mult(random(55, 65));
                 }
             }
         }
 
         push();
         countdownFrames--;
-        if (countdownFrames < 20) {
+        if (countdownFrames < transitionFrames) {
             if (countdownFrames > 0) {
-                let progress = countdownFrames / 20;
+                let progress = countdownFrames / transitionFrames;
                 progress *= progress;
                 let tintVal = floor(255 * progress);
                 tint(255, 255 - tintVal);
